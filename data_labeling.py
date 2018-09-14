@@ -77,7 +77,7 @@ def classify_image(settings, parameters, image_name):
 	"""
 	"""
 	path = settings['images'] + settings['batch_name']
-	line = "./{} {} ".format( path + settings['pos_dir_name'] + image_name, len(parameters['stack']) )
+	line = "./{} {} ".format( settings['pos_dir_name'] + image_name, len(parameters['stack']) )
 	for coord in parameters['stack']:
 		x, y, w, h = coord[0][0], coord[0][1], coord[1][0] - coord[0][0], coord[1][1] - coord[0][1]
 		line += "{} {} {} {} ".format(x, y, w, h)
@@ -129,7 +129,7 @@ def image_classifier(settings):
 					parameters['images'].pop(-1)
 				except IndexError:
 					logging.info("You cannot delete more figures as there are None.")
-			elif k == 10: # ENTER KEYSTROKE
+			elif k == 10 or k == 13: # ENTER KEYSTROKE
 				logging.info('NEXT')
 				classify_image(settings, parameters, image_name)
 				break
