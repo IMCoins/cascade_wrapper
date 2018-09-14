@@ -205,7 +205,7 @@ if __name__ == '__main__':
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument('-p', action='store_true')
 	group.add_argument('-n', action='store_false')
-	args = parser.parse_args(['-p'])
+	args = parser.parse_args()
 
 	logging.basicConfig(level=10)
 
