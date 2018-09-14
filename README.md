@@ -66,35 +66,36 @@ Explanation:
 
 * images
 
-This is the parent folder of your project.
+	This is the parent folder of your project.
 
 * batch_name : 
 
-A batch is an iteration of your project. You can come back to one's batch later on to improve it. (implementation improvement idea : Add a module to merge two batches together)
+	A batch is an iteration of your project. You can come back to one's batch later on to improve it. (implementation improvement idea : Add a module to merge two batchhes together)
 
 * generic_image_name :
 
-This value defines what will prefix each of your images name when you gather it.
+	This value defines what will prefix each of your images name when you gather it.
 
 * raw_pos_dir_name : 
 
-This folder is placed in your batch, and is the folder in which the *non*-classified positive images are going.
+	This folder is placed in your batch, and is the folder in which the *non*-classified positive images are going.
 
 * pos_dir_name :
 
-This folder is placed in your batch, and is the folder in which the classified positive images are going.
+	This folder is placed in your batch, and is the folder in which the classified positive images are going.
 
 * neg_dir_name : 
 
-This folder is placed in your batch, and is the folder in which the negative images are going.
+	This folder is placed in your batch, and is the folder in which the negative images are going.
 
 * output : 
 
-This directory received your trained model. `output` is short for `output` of training.
+	This directory received your trained model. `output` is short for `output` of training.
 
 * img_ext : 
 
-Extension of the images you're going to save while gathering.
+	Extension of the images you're going to save while gathering.
+
 
 	2. data_gathering.py
 
