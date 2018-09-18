@@ -1,9 +1,11 @@
 {
 	"images" : "test_classifier/",
-	"batch_name" : "Batch_Matthieu/",
+	"batch_name" : "Batch_Kilian/",
 	"generic_image_name" : "img_",
 	"raw_pos_dir_name" : "non-classified_positives/",
 	"pos_dir_name" : "positives_test/",
 	"neg_dir_name" : "negatives-coucou/",
+	"output" : "output/",
+	"test_dir" : "test_images/",
 	"img_ext" : ".jpg"
 }
