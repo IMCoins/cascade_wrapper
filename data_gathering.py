@@ -1,21 +1,12 @@
-import json
-import logging
-import argparse
-
-#	intel lib that reads the camera
-import pyrealsense2 as rs
-
-#	Read and display the image
-import cv2
-
-#	Get the color of an image
-import numpy as np
-
-#	Path checking
 import os
-
-#	To save the image
+import argparse
+import logging
+import json
+import cv2
+import pyrealsense2 as rs
+import numpy as np
 from scipy.misc import imsave
+
 
 def save_img_to_batch(settings, image_to_save):
 	"""
@@ -36,6 +27,9 @@ def save_img_to_batch(settings, image_to_save):
 					...
 	"""
 	sub_dir = settings['images'] + settings['batch_name']
+	if settings['test']:
+		sub_dir += settings['test_dir']
+
 	if settings['action']:
 		sub_dir += settings['raw_pos_dir_name']
 	else:
@@ -60,6 +54,25 @@ def save_img_to_batch(settings, image_to_save):
 
 	return 1
 
+def create_sub_batch_dir(config, path_to_batch):
+	raw_pos_batch = path_to_batch + config['raw_pos_dir_name']
+	if not os.path.exists(raw_pos_batch):
+		os.makedirs(raw_pos_batch)
+		logging.info('Creating raw positives directory at {}'\
+					 .format(os.path.abspath(raw_pos_batch)))
+
+	pos_batch = path_to_batch + config['pos_dir_name']
+	if not os.path.exists(pos_batch):
+		os.makedirs(pos_batch)
+		logging.info('Creating positives directory at {}'\
+					 .format(os.path.abspath(pos_batch)))
+
+	neg_batch = path_to_batch + config['neg_dir_name']
+	if not os.path.exists(neg_batch):
+		os.makedirs(neg_batch)
+		logging.info('Creating negatives directory at {}'\
+					 .format(os.path.abspath(neg_batch)))
+
 def check_directories(config):
 	"""	Checks if the directories exists.
 		If not, create them as the path have been checked earlier on.
@@ -75,23 +88,20 @@ def check_directories(config):
 		logging.info('Creating batch directory at {}'\
 					 .format(os.path.abspath(batch_dir)))
 
-	raw_pos_batch = batch_dir + config['raw_pos_dir_name']
-	if not os.path.exists(raw_pos_batch):
-		os.makedirs(raw_pos_batch)
-		logging.info('Creating batch directory at {}'\
-					 .format(os.path.abspath(raw_pos_batch)))
+	test_imgs = batch_dir + config['test_dir']
+	if not os.path.exists(test_imgs):
+		os.makedirs(test_imgs)
+		logging.info('Creating test directory at {}'\
+					 .format(os.path.abspath(test_imgs)))
 
-	pos_batch = batch_dir + config['pos_dir_name']
-	if not os.path.exists(pos_batch):
-		os.makedirs(pos_batch)
-		logging.info('Creating batch directory at {}'\
-					 .format(os.path.abspath(pos_batch)))
-
-	neg_batch = batch_dir + config['neg_dir_name']
-	if not os.path.exists(neg_batch):
-		os.makedirs(neg_batch)
-		logging.info('Creating batch directory at {}'\
-					 .format(os.path.abspath(neg_batch)))
+	if create_sub_batch_dir(config, batch_dir) == 0:
+		logging.critical("Failed to create directory in {}"\
+						 .format(os.path.abspath(batch_dir)))
+		return 0
+	if create_sub_batch_dir(config, test_imgs) == 0:
+		logging.critical("Failed to create directory in {}"\
+						 .format(os.path.abspath(test_imgs)))
+		return 0
 
 	return 1
 
@@ -100,31 +110,25 @@ def check_paths(config):
 		Returns:
 			0 if behavior is wrong.
 			1 if everything is fine.
+		Note : At the moment, it always returns 1.
 	"""
 	if config['images'][-1] != '/':
-		logging.critical("'{0}' from 'images' parameter in settings file should be '{0}/'"\
-						.format(config['images']))
-		return 0
+		config['images'] += '/'
 
 	if config['batch_name'][-1] != '/':
-		logging.critical("'{0}' from 'batch_name' parameter in settings file should be '{0}/'"\
-						.format(config['batch_name']))
-		return 0
+		config['batch_name'] += '/'
 
 	if config['raw_pos_dir_name'][-1] != '/':
-		logging.critical("'{0}' from 'raw_pos_dir_name' parameter in settings file should be '{0}/'"\
-						.format(config['raw_pos_dir_name']))
-		return 0
+		config['raw_pos_dir_name'] += '/'
 
 	if config['pos_dir_name'][-1] != '/':
-		logging.critical("'{0}' from 'pos_dir_name' parameter in settings file should be '{0}/'"\
-						.format(config['pos_dir_name']))
-		return 0
+		config['pos_dir_name'] += '/'
 
 	if config['neg_dir_name'][-1] != '/':
-		logging.critical("'{0}' from 'neg_dir_name' parameter in settings file should be '{0}/'"\
-						.format(config['neg_dir_name']))
-		return 0
+		config['neg_dir_name'] += '/'
+
+	if config['test_dir'][-1] != '/':
+		config['test_dir'] += '/'
 
 	return 1
 
@@ -205,12 +209,16 @@ if __name__ == '__main__':
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument('-p', action='store_true')
 	group.add_argument('-n', action='store_false')
-	args = parser.parse_args()
+
+	parser.add_argument('-t', action='store_true')
+	args = parser.parse_args(['-tp'])
 
 	logging.basicConfig(level=10)
 
 	with open(os.path.abspath('settings.json'), 'r') as json_file:
 		config = json.load(json_file)
+		config['test'] = args.t
 		config['action'] = args.p
 
+	print "Test:{}\nAction:{}\n".format(config['test'], config['action'])
 	data_gathering(config)
