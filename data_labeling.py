@@ -1,8 +1,11 @@
 import os
-import cv2
+import argparse
 import logging
-import sys
 import json
+import cv2
+import sys
+
+from data_gathering import check_paths
 
 def check_directories(settings):
 	"""	Checks if the directories exists.
@@ -31,8 +34,14 @@ def classifier_args_checker(func):
 	def wrapper(settings):
 		err = check_directories(settings)
 		if not err:
-			logging.critical("Stopping program.")
+			logging.critical("Stopping program after directory checking.")
 			return 0
+
+		err = check_paths(settings)
+		if not err:
+			logging.critical("Stopping program after path checking.")
+			return 0
+
 		return func(settings)
 
 	return wrapper
@@ -77,6 +86,8 @@ def classify_image(settings, parameters, image_name):
 	"""
 	"""
 	path = settings['images'] + settings['batch_name']
+	if settings['action']:
+		path += settings['test_dir']
 	line = "./{} {} ".format( settings['pos_dir_name'] + image_name, len(parameters['stack']) )
 	for coord in parameters['stack']:
 		x, y, w, h = coord[0][0], coord[0][1], coord[1][0] - coord[0][0], coord[1][1] - coord[0][1]
@@ -141,9 +152,14 @@ def image_classifier(settings):
 	return
 
 if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-t', action='store_true')
+	args = parser.parse_args(['-t'])
+
 	logging.basicConfig(level=10)
 
 	with open(os.path.abspath('settings.json'), 'r') as json_file:
 		config = json.load(json_file)
+		config['action'] = args.t
 
 	image_classifier(config)
