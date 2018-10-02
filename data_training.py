@@ -1,7 +1,7 @@
-import logging
 import os
-import json
 import argparse
+import logging
+import json
 import cv2
 
 def minus_n_percent(n_percent, number):
@@ -15,7 +15,8 @@ def training_args_checker(func):
 		if not os.path.exists(path):
 			os.makedirs(path)
 		else:
-			logging.warning("As an output already exists, are you sure you want to continue ? (y/N)")
+			logging.warning("As an output already exists, are you sure you want to continue ?\
+				\nYou will erase previous save doing so : (y/N)")
 			k = raw_input("")
 			if k != 'y':
 				return 0
@@ -42,7 +43,7 @@ def training(settings):
 		-vec {vec_path}feature.vec \
 		-num {size} \
 		-w 48 \
-		-h 48'\
+		-h 30'\
 		.format(size=pos_batch, pos_txt=pos_txt, vec_path=path_to_batch)
 	os.system(create_vector_feature)
 
@@ -53,9 +54,9 @@ def training(settings):
 		-bg {neg_txt} \
 		-numPos {size_p} \
 		-numNeg {size_n} \
-		-numStages 15 \
+		-numStages 13 \
 		-w 48 \
-		-h 48 \
+		-h 30 \
 		-featureType LBP \
 		-precalcValBufSize 16192 \
 		-precalcIdxBufSize 16192 \
