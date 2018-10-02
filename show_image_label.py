@@ -45,8 +45,10 @@ def main(images_summary, specific=[]):
 			name = elements.pop(0)
 			nb_objs = elements.pop(0)
 
-			if specific and name not in specific:
-				continue
+			if specific:
+				parsed_name = name.split('/')[-1]
+				if parsed_name not in specific:
+					continue
 
 			try:
 				img = cv2.imread(name)
@@ -55,7 +57,7 @@ def main(images_summary, specific=[]):
 				gen = next_rect(elements)
 				for _ in range(int(nb_objs)):
 					top_corner, bottom_corner = next(gen)
-					cv2.rectangle(arr, top_corner, bottom_corner, (0, 255, 0), 1)
+					cv2.rectangle(img, top_corner, bottom_corner, (0, 255, 0), 1)
 
 				#	Displays window and wait for input.
 				cv2.imshow(name, img)
