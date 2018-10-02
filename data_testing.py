@@ -1,22 +1,23 @@
 import cv2
 import os
 import json
-
-# from scipy.misc import imsave
+import pyrealsense2 as rs
+import numpy as np
+from scipy.misc import imsave
 
 def save_image(objects, image, folder):
-	all_images = os.listdir('./temporary/img')
+	all_images = os.listdir('./{}img'.format(folder))
 
 	name = "temp_{}.jpg".format(str(len(all_images)))
-	with open("./temporary/gen.txt", "a") as out:
-		line = "./temporary/img/{} {}".format(name, len(objects))
+	with open("./{}gen.txt".format(folder), "a") as out:
+		line = "./{}img/{} {}".format(folder, name, len(objects))
 		for (x, y, w, h) in objects:
 			line += " {} {} {} {}".format(x, y, w, h)
 		out.write(line)
 
-	imsave("./temporary/img/{}".format(name), image)
+	imsave("./{}img/{}".format(folder, name), image)
 
-def streaming_test(cascade, images_folder):
+def streaming_test(cascade, image_folder):
 	pipe = rs.pipeline()
 	profile = pipe.start()
 	try:
@@ -37,7 +38,7 @@ def streaming_test(cascade, images_folder):
 				break
 
 			if not isinstance(objects, tuple):
-				save_image(objects, image)
+				save_image(objects, image, image_folder)
 	finally:
 		cv2.destroyAllWindows()
 		pipe.stop()
@@ -63,7 +64,9 @@ def path_checker(func):
 def main(settings,
 		 stream = False,
 		 default_saving_folder = "default_test/"):
-	cascade = cv2.CascadeClassifier( f"./{ settings['output'] }cascade.xml" )
+	print "./{}cascade.xml".format(settings['output'])
+	cascade = cv2.CascadeClassifier( "./{}{}{}cascade.xml"\
+		.format(settings['images'], settings['batch_name'], settings['output']) )
 	if stream:
 		streaming_test(cascade, default_saving_folder)
 	else:
@@ -76,7 +79,7 @@ if __name__ == '__main__':
 	parser.add_argument("--stream", action='store_true',
 		help = "Activate streaming testing, instead of batch testing")
 	parser.add_argument("--folder", default='default_test/')
-	args = parser.parse_args()
+	args = parser.parse_args(['--stream'])
 
 	with open(os.path.abspath('settings.json'), 'r') as json_file:
 		settings = json.load(json_file)
