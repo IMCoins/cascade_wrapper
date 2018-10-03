@@ -53,27 +53,6 @@ def streaming_test(cascade, image_folder):
 		cv2.destroyAllWindows()
 		pipe.stop()
 
-# def get_area(rect):
-# 	"""
-# 	"""
-# 	width = abs(rect.top.x - rect.bot.x)
-# 	height = abs(rect.top.y - rect.bot.y)
-# 	return width * height
-
-# def get_common_area(rect_1, rect_2):
-# 	""" top_l_x = max(rect_1.top.x, rect_2.top.x)
-# 		top_l_y = min(rect_1.top.y, rect_2.top.y)
-
-# 		bottom_r_x = min(rect_1.bot.x, rect_2.bot.x)
-# 		bottom_r_y = max(rect_1.bot.y, rect_2.bot.y)
-# 	"""
-# 	top_corner	= Point(max(rect_1.top.x, rect_2.top.x), min(rect_1.top.y, rect_2.top.y))
-# 	bot_corner	= Point(min(rect_1.bot.x, rect_2.bot.x), max(rect_1.bot.y, rect_2.bot.y))
-
-# 	width = abs(top_corner.x - bot_corner.x)
-# 	height = abs(top_corner.y - bot_corner.y)
-# 	return width * height
-
 def does_rect_overlap(pred_rect, rectangles, threshold):
 	found = []
 
@@ -96,13 +75,14 @@ def test_batch(cascade, settings):
 	pos_graph = nx.Graph()
 	true_pos, false_pos, true_neg, false_neg = 0, 0, 0, 0
 	with open(pos_summary) as pos:
-		objs_found = 0
 		lines = pos.readlines()
 		for instructions in lines:
+			objs_found = 0
 			elements = instructions.split(' ')
 
 			#	Storing name of image to make predictions on, and the number of objects in it.
 			name = elements.pop(0)
+			print 'Opening : {}'.format(name)
 			nb_objs = int(elements.pop(0))
 
 			#	Objects contain the real position of all the objects in image.
@@ -139,9 +119,19 @@ def test_batch(cascade, settings):
 			if objs_found == nb_objs:
 				true_pos += objs_found
 			else:
-				diff = objs_found / nb_objs
-				true_pos += diff
-				false_neg += (1 - diff)
+				diff = nb_objs - objs_found
+				true_pos += nb_objs - diff
+				if diff > 0:
+					# print 'A'
+					false_neg += diff
+				else:
+					# print 'B'
+					false_pos += diff
+			false_neg += abs(objs_found - nb_objs)
+
+			mess = 'TP : {}\nFP : {}\nTN : {}\nFN : {}\n'\
+			.format(true_pos, false_pos, true_neg, false_neg)
+			print(mess)
 
 	with open(neg_summary) as neg:
 		lines = neg.readlines()
