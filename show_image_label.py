@@ -21,6 +21,8 @@ def next_rect(elements):
 			Both top left and bottom right corners of the next rectangle in list.
 	"""
 	while elements:
+		if len(elements) < 4:
+			break
 		rect = get_rectangle(elements[:4])
 		elements = elements[4:]
 		yield rect
@@ -78,6 +80,6 @@ if __name__ == '__main__':
 		help = "Path to file in which are registered the images name and the rectangles to draw")
 	parser.add_argument('--images', default = [], nargs = '+',
 		help = "Specific images to seek, instead of all images if not specified")
-	args = parser.parse_args()
+	args = parser.parse_args(['test_classifier/Batch_Kilian_2/test_images/positives_test.txt'])
 
 	main(args.gen_file, args.images)
