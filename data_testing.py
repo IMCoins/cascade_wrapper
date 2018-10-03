@@ -6,7 +6,8 @@ import numpy as np
 
 from scipy.misc import imsave
 from show_image_label import next_rect
-from collections import namedtuple
+
+from geometry import Rectangle, Point
 
 #	Graph and Best matching algorithms
 import networkx as nx
@@ -52,35 +53,33 @@ def streaming_test(cascade, image_folder):
 		cv2.destroyAllWindows()
 		pipe.stop()
 
-def get_area(rect):
-	"""
-	"""
-	width = abs(rect.top.x - rect.bot.x)
-	height = abs(rect.top.y - rect.bot.y)
-	return width * height
+# def get_area(rect):
+# 	"""
+# 	"""
+# 	width = abs(rect.top.x - rect.bot.x)
+# 	height = abs(rect.top.y - rect.bot.y)
+# 	return width * height
 
-def get_common_area(rect_1, rect_2):
-	""" top_l_x = max(rect_1.top.x, rect_2.top.x)
-		top_l_y = min(rect_1.top.y, rect_2.top.y)
+# def get_common_area(rect_1, rect_2):
+# 	""" top_l_x = max(rect_1.top.x, rect_2.top.x)
+# 		top_l_y = min(rect_1.top.y, rect_2.top.y)
 
-		bottom_r_x = min(rect_1.bot.x, rect_2.bot.x)
-		bottom_r_y = max(rect_1.bot.y, rect_2.bot.y)
-	"""
-	point = namedtuple('pt', ['x', 'y'])
-	print rect_1, rect_2
-	top_corner		= point(max(rect_1.top.x, rect_2.top.x), min(rect_1.top.y, rect_2.top.y))
-	bot_corner	= point(min(rect_1.bot.x, rect_2.bot.x), max(rect_1.bot.y, rect_2.bot.y))
+# 		bottom_r_x = min(rect_1.bot.x, rect_2.bot.x)
+# 		bottom_r_y = max(rect_1.bot.y, rect_2.bot.y)
+# 	"""
+# 	top_corner	= Point(max(rect_1.top.x, rect_2.top.x), min(rect_1.top.y, rect_2.top.y))
+# 	bot_corner	= Point(min(rect_1.bot.x, rect_2.bot.x), max(rect_1.bot.y, rect_2.bot.y))
 
-	width = abs(top_corner.x - bot_corner.x)
-	height = abs(top_corner.y - bot_corner.y)
-	return width * height
+# 	width = abs(top_corner.x - bot_corner.x)
+# 	height = abs(top_corner.y - bot_corner.y)
+# 	return width * height
 
 def does_rect_overlap(pred_rect, rectangles, threshold):
 	found = []
 
-	pred_area = get_area(pred_rect)
+	pred_area = pred_rect.area
 	for rect in rectangles:
-		area_diff = pred_area - get_common_area( rect, pred_rect )
+		area_diff = pred_area - rect.get_common_area(pred_rect)
 
 		percentage_diff = pred_area / area_diff * 100
 		if percentage_diff > threshold:
@@ -94,11 +93,7 @@ def test_batch(cascade, settings):
 	pos_summary = path_to_images + settings['pos_dir_name'][:-1] + '.txt'
 	neg_summary = path_to_images + settings['neg_dir_name'][:-1] + '.txt'
 
-	
-	rectangle_tuple = namedtuple('rectangle_named_tuple', ['top', 'bot'])
-	point = namedtuple('pt', ['x', 'y'])
 	pos_graph = nx.Graph()
-
 	true_pos, false_pos, true_neg, false_neg = 0, 0, 0, 0
 	with open(pos_summary) as pos:
 		objs_found = 0
@@ -122,9 +117,9 @@ def test_batch(cascade, settings):
 			#	Threshold as to "minimum percentage of similitude for acceptance"
 			threshold = 90
 			for found in pred_objects:
-				top = point(found[0], found[1])
-				bot = point(found[0] + found[2], found[1] + found[3])
-				curr_found = rectangle_tuple(top, bot)
+				top = Point(found[0], found[1])
+				bot = Point(found[0] + found[2], found[1] + found[3])
+				curr_found = Rectangle(top, bot)
 				pos_graph.add_node(curr_found)
 				ok = does_rect_overlap(curr_found, real_objects, threshold)
 				for pred_rect, rect in ok:
