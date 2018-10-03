@@ -3,8 +3,8 @@ class Rectangle():
 		self.top = top
 		self.bot = bot
 
-	def __eq__(self, other):
-		return self.top == other.top and self.bot == other.bot
+	# def __eq__(self, other):
+	# 	return self.top == other.top and self.bot == other.bot
 
 	def __repr__(self):
 		return 'Rectangle(top: {}, bot: {})'.format(self.top, self.bot)
@@ -35,8 +35,8 @@ class Point():
 		self.x = x
 		self.y = y
 
-	def __eq__(self, other):
-		return self.x == other.x and self.y == other.y
+	# def __eq__(self, other):
+	# 	return self.x == other.x and self.y == other.y
 
 	def __repr__(self):
 		return 'Point(x : {}, y : {})'.format(self.x, self.y)
