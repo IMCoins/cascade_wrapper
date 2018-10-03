@@ -10,7 +10,7 @@ from collections import namedtuple
 
 #	Graph and Best matching algorithms
 import networkx as nx
-from networkx.algorithms.bipartite.matching import maximum_matching as max_match
+from networkx.algorithms.bipartite.matching import maximum_matching as mm
 
 def save_image(objects, image, folder):
 	all_images = os.listdir('./{}img'.format(folder))
@@ -52,6 +52,13 @@ def streaming_test(cascade, image_folder):
 		cv2.destroyAllWindows()
 		pipe.stop()
 
+def get_area(rect):
+	"""
+	"""
+	width = abs(rect.top.x - rect.bot.x)
+	height = abs(rect.top.y - rect.bot.y)
+	return width * height
+
 def get_common_area(rect_1, rect_2):
 	""" top_l_x = max(rect_1.top.x, rect_2.top.x)
 		top_l_y = min(rect_1.top.y, rect_2.top.y)
@@ -59,19 +66,21 @@ def get_common_area(rect_1, rect_2):
 		bottom_r_x = min(rect_1.bot.x, rect_2.bot.x)
 		bottom_r_y = max(rect_1.bot.y, rect_2.bot.y)
 	"""
-	top_corner		= point([max(rect_1.top.x, rect_2.top.x), min(rect_1.top.y, rect_2.top.y)])
-	bottom_corner	= point([min(rect_1.bot.x, rect_2.bot.x), max(rect_1.bot.y, rect_2.bot.y)])
+	point = namedtuple('pt', ['x', 'y'])
+	print rect_1, rect_2
+	top_corner		= point(max(rect_1.top.x, rect_2.top.x), min(rect_1.top.y, rect_2.top.y))
+	bot_corner	= point(min(rect_1.bot.x, rect_2.bot.x), max(rect_1.bot.y, rect_2.bot.y))
 
 	width = abs(top_corner.x - bot_corner.x)
 	height = abs(top_corner.y - bot_corner.y)
 	return width * height
 
-def does_rectangle_overlap(pred_rect, rectangles, threshold):
+def does_rect_overlap(pred_rect, rectangles, threshold):
 	found = []
 
 	pred_area = get_area(pred_rect)
 	for rect in rectangles:
-		area_diff = pred_area - get_common_area( rect, pred_area )
+		area_diff = pred_area - get_common_area( rect, pred_rect )
 
 		percentage_diff = pred_area / area_diff * 100
 		if percentage_diff > threshold:
@@ -82,11 +91,15 @@ def does_rectangle_overlap(pred_rect, rectangles, threshold):
 
 def test_batch(cascade, settings):
 	path_to_images = settings['images'] + settings['batch_name'] + settings['test_dir']
-	pos_summary = os.listdir(path_to_images + settings['pos_dir_name'][:-1] + '.txt')
-	neg_summary = os.listdir(path_to_images + settings['neg_dir_name'][:-1] + '.txt')
+	pos_summary = path_to_images + settings['pos_dir_name'][:-1] + '.txt'
+	neg_summary = path_to_images + settings['neg_dir_name'][:-1] + '.txt'
 
+	
 	rectangle_tuple = namedtuple('rectangle_named_tuple', ['top', 'bot'])
+	point = namedtuple('pt', ['x', 'y'])
 	pos_graph = nx.Graph()
+
+	true_pos, false_pos, true_neg, false_neg = 0, 0, 0, 0
 	with open(pos_summary) as pos:
 		objs_found = 0
 		lines = pos.readlines()
@@ -109,8 +122,11 @@ def test_batch(cascade, settings):
 			#	Threshold as to "minimum percentage of similitude for acceptance"
 			threshold = 90
 			for found in pred_objects:
-				pos_graph.add_node(found)
-				ok = does_rect_overlap(found, real_objects, threshold)
+				top = point(found[0], found[1])
+				bot = point(found[0] + found[2], found[1] + found[3])
+				curr_found = rectangle_tuple(top, bot)
+				pos_graph.add_node(curr_found)
+				ok = does_rect_overlap(curr_found, real_objects, threshold)
 				for pred_rect, rect in ok:
 					pos_graph.add_edge(pred_rect, rect)
 		
@@ -145,6 +161,10 @@ def test_batch(cascade, settings):
 			else:
 				false_pos += len(pred_objects)
 
+	mess = 'TP : {}\nFP : {}\nTN : {}\nFN : {}\n'\
+	.format(true_pos, false_pos, true_neg, false_neg)
+	print(mess)
+
 def path_checker(func):
 	def wrapper(*args, **kwargs):
 		if 'default_saving_folder' in kwargs and\
@@ -163,7 +183,6 @@ def path_checker(func):
 def main(settings,
 		 stream = False,
 		 default_saving_folder = "default_test/"):
-	print "./{}cascade.xml".format(settings['output'])
 	cascade = cv2.CascadeClassifier( "./{}{}{}cascade.xml"\
 		.format(settings['images'], settings['batch_name'], settings['output']) )
 	if stream:
