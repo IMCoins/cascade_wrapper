@@ -1,6 +1,7 @@
 import cv2
+from geometry import Rectangle, Point
 
-def get_corners(rect):
+def get_rectangle(rect):
 	"""
 		Args:
 			rect: list
@@ -8,9 +9,9 @@ def get_corners(rect):
 		Returns:
 			Properly formatted top left and bottom right corners of the given rectangle.
 	"""
-	top_left_corner = int(rect[0]), int(rect[1])
-	bottom_right_corner = int(rect[0]) + int(rect[2]), int(rect[1]) + int(rect[3])
-	return (top_left_corner, bottom_right_corner)
+	top_left_corner = Point( int(rect[0]), int(rect[1]) )
+	bottom_right_corner = Point( int(rect[0]) + int(rect[2]), int(rect[1]) + int(rect[3]) )
+	return Rectangle(top_left_corner, bottom_right_corner)
 
 def next_rect(elements):
 	"""	Args:
@@ -20,9 +21,9 @@ def next_rect(elements):
 			Both top left and bottom right corners of the next rectangle in list.
 	"""
 	while elements:
-		top_corner, bottom_corner = get_corners(elements[:4])
+		rect = get_rectangle(elements[:4])
 		elements = elements[4:]
-		yield top_corner, bottom_corner
+		yield rect
 
 def main(images_summary, specific=[]):
 	"""
@@ -56,8 +57,8 @@ def main(images_summary, specific=[]):
 				#	Displays all the rectangle into the image we just read.
 				gen = next_rect(elements)
 				for _ in range(int(nb_objs)):
-					top_corner, bottom_corner = next(gen)
-					cv2.rectangle(img, top_corner, bottom_corner, (0, 255, 0), 1)
+					rect = next(gen)
+					cv2.rectangle(img, (rect.top.x, rect.top.y), (rect.bot.x, rect.bot.y), (0, 255, 0), 1)
 
 				#	Displays window and wait for input.
 				cv2.imshow(name, img)
