@@ -88,7 +88,8 @@ def classify_image(settings, parameters, image_name):
 	path = settings['images'] + settings['batch_name']
 	if settings['action']:
 		path += settings['test_dir']
-	line = "./{} {} ".format( settings['pos_dir_name'] + image_name, len(parameters['stack']) )
+
+	line = "{}/{} {} ".format( os.path.abspath(path + settings['pos_dir_name']), image_name, len(parameters['stack']) )
 	for coord in parameters['stack']:
 		x, y, w, h = coord[0][0], coord[0][1], coord[1][0] - coord[0][0], coord[1][1] - coord[0][1]
 		line += "{} {} {} {} ".format(x, y, w, h)
@@ -109,9 +110,14 @@ def image_classifier(settings):
 		Returns:
 			None. This function is meant to be used as a stand-alone.
 	"""
-	path = settings['images'] + settings['batch_name'] + settings['raw_pos_dir_name']
+	path = settings['images'] + settings['batch_name']
+	if settings['action']:
+		path += settings['test_dir']
+	path += settings['raw_pos_dir_name']
 	images = os.listdir(path)
-	for image_name in images:
+	count = len(images)
+	for idx, image_name in enumerate(images):
+		logging.info("There are {} images to classify left.".format(count - idx))
 		#	Opening new image from non-classified images.
 		image = cv2.imread(path + image_name)
 
@@ -141,7 +147,6 @@ def image_classifier(settings):
 				except IndexError:
 					logging.info("You cannot delete more figures as there are None.")
 			elif k == 10 or k == 13: # ENTER KEYSTROKE
-				logging.info('NEXT')
 				classify_image(settings, parameters, image_name)
 				break
 			elif k == ord('h'):
