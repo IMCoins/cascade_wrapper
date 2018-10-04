@@ -75,15 +75,15 @@ def test_batch(cascade, settings):
 	pos_summary = path_to_images + settings['pos_dir_name'][:-1] + '.txt'
 	neg_summary = path_to_images + settings['neg_dir_name'][:-1] + '.txt'
 
-	#	Instantiation of graph, used for best_matching algorithm.
-	pos_graph = nx.Graph()
 
-	# stats = true_pos, false_pos, true_neg, false_neg
+	# stats = true_pos, false_neg, true_neg, false_pos
 	stats = np.array( [0, 0, 0 ,0] )
 	with open(pos_summary) as pos:
 		lines = pos.readlines()
 		for instructions in lines:
-			objs_found = 0
+			#	Instantiation of graph, used for best_matching algorithm.
+			pos_graph = nx.Graph()
+
 			elements = instructions.split(' ')
 
 			#	Storing name of image to make predictions on, and the number of objects in it.
@@ -115,20 +115,25 @@ def test_batch(cascade, settings):
 			#	Now that our graph is done, let's check in our subgraphs, and count
 			#	the maximum elements that match our objects.
 			subgraphs = nx.connected_component_subgraphs(pos_graph)
+			objs_found = 0
 			for graph in subgraphs:
 				if len(graph.nodes) == 2:
+					# print 'eh'
 					objs_found += 1
 				else:
+					# print 'oh'
 					max_match = mm(graph)
 					objs_found += len(max_match)
-
+					
 			#	Update our general positive image stats:
 			stats += positive_image_stats(objs_found ,nb_objs)
 
 	with open(neg_summary) as neg:
 		lines = neg.readlines()
 		for instructions in lines:
-			image = cv2.imread(name)
+			instructions = instructions.strip('\n')
+
+			image = cv2.imread(instructions)
 			gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 			pred_objects = cascade.detectMultiScale(gray_image)
 
@@ -137,7 +142,7 @@ def test_batch(cascade, settings):
 
 	show = True
 	if show:
-		show_data(stats)
+		show_data(*stats)
 	return 1
 
 def path_checker(func):
