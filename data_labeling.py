@@ -159,7 +159,7 @@ def image_classifier(settings):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-t', action='store_true')
-	args = parser.parse_args(['-t'])
+	args = parser.parse_args()
 
 	logging.basicConfig(level=10)
 
