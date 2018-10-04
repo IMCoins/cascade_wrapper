@@ -9,6 +9,9 @@ from show_image_label import next_rect
 
 from geometry import Rectangle, Point
 
+from statistics import positive_image_stats, negative_image_stats
+from dashboard import show_data
+
 #	Graph and Best matching algorithms
 import networkx as nx
 from networkx.algorithms.bipartite.matching import maximum_matching as mm
@@ -72,8 +75,11 @@ def test_batch(cascade, settings):
 	pos_summary = path_to_images + settings['pos_dir_name'][:-1] + '.txt'
 	neg_summary = path_to_images + settings['neg_dir_name'][:-1] + '.txt'
 
+	#	Instantiation of graph, used for best_matching algorithm.
 	pos_graph = nx.Graph()
-	true_pos, false_pos, true_neg, false_neg = 0, 0, 0, 0
+
+	# stats = true_pos, false_pos, true_neg, false_neg
+	stats = np.array( [0, 0, 0 ,0] )
 	with open(pos_summary) as pos:
 		lines = pos.readlines()
 		for instructions in lines:
@@ -82,7 +88,6 @@ def test_batch(cascade, settings):
 
 			#	Storing name of image to make predictions on, and the number of objects in it.
 			name = elements.pop(0)
-			print 'Opening : {}'.format(name)
 			nb_objs = int(elements.pop(0))
 
 			#	Objects contain the real position of all the objects in image.
@@ -96,6 +101,8 @@ def test_batch(cascade, settings):
 
 			#	Threshold as to "minimum percentage of similitude for acceptance"
 			threshold = 90
+
+			#	Linking each predicted rectangle to real objects that match the % threshold.
 			for found in pred_objects:
 				top = Point(found[0], found[1])
 				bot = Point(found[0] + found[2], found[1] + found[3])
@@ -115,23 +122,8 @@ def test_batch(cascade, settings):
 					max_match = mm(graph)
 					objs_found += len(max_match)
 
-			#	Update our general stats.
-			if objs_found == nb_objs:
-				true_pos += objs_found
-			else:
-				diff = nb_objs - objs_found
-				true_pos += nb_objs - diff
-				if diff > 0:
-					# print 'A'
-					false_neg += diff
-				else:
-					# print 'B'
-					false_pos += diff
-			false_neg += abs(objs_found - nb_objs)
-
-			mess = 'TP : {}\nFP : {}\nTN : {}\nFN : {}\n'\
-			.format(true_pos, false_pos, true_neg, false_neg)
-			print(mess)
+			#	Update our general positive image stats:
+			stats += positive_image_stats(objs_found ,nb_objs)
 
 	with open(neg_summary) as neg:
 		lines = neg.readlines()
@@ -141,14 +133,12 @@ def test_batch(cascade, settings):
 			pred_objects = cascade.detectMultiScale(gray_image)
 
 			#	Update out general stats.
-			if not isinstance(pred_objects, tuple):
-				true_neg += 1
-			else:
-				false_pos += len(pred_objects)
+			stats += negative_image_stats( len(pred_objects) )
 
-	mess = 'TP : {}\nFP : {}\nTN : {}\nFN : {}\n'\
-	.format(true_pos, false_pos, true_neg, false_neg)
-	print(mess)
+	show = True
+	if show:
+		show_data(stats)
+	return 1
 
 def path_checker(func):
 	def wrapper(*args, **kwargs):
